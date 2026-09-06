@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "interaction": {
+      "title": "Interaction",
+      "description": "A private multi-turn journal entry and AI reflection session for an authenticated user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction.",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning user.",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Title or topic of the journal reflection.",
+          "maxLength": 300
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Initial journal entry or user reflection prompt.",
+          "maxLength": 10000
+        },
+        "response": {
+          "type": "string",
+          "description": "Gemini AI reflection, summary, or response.",
+          "maxLength": 25000
+        },
+        "mode": {
+          "type": "string",
+          "description": "Mode of reflection: reflect, brainstorm, summarize, or chat.",
+          "enum": ["reflect", "brainstorm", "summarize", "chat"]
+        },
+        "messages": {
+          "type": "array",
+          "description": "Ordered multi-turn dialogue history within this journal thread."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Optional category tags for filtering entries."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp or server timestamp when the entry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp or server timestamp when the entry was last modified."
+        }
+      },
+      "required": ["id", "userId", "prompt", "response", "createdAt"]
+    },
+    "generalInquiry": {
+      "title": "GeneralInquiry",
+      "description": "A direct general knowledge question and AI response logged for an authenticated user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the general inquiry.",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning user.",
+          "maxLength": 128
+        },
+        "question": {
+          "type": "string",
+          "description": "Direct question asked to the Gemini API.",
+          "maxLength": 10000
+        },
+        "response": {
+          "type": "string",
+          "description": "Gemini AI answer and general knowledge response.",
+          "maxLength": 35000
+        },
+        "category": {
+          "type": "string",
+          "description": "Optional category or topic for the inquiry (e.g. Science, Tech, Philosophy).",
+          "maxLength": 100
+        },
+        "modelUsed": {
+          "type": "string",
+          "description": "Gemini model that generated the response.",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when the inquiry was asked."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp when the inquiry was last updated."
+        }
+      },
+      "required": ["id", "userId", "question", "response", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/interactions/{interactionId}": {
+      "schema": "interaction",
+      "description": "User-isolated document storage for private journal reflections and chat conversations with Gemini."
+    },
+    "/users/{userId}/general-inquiries/{inquiryId}": {
+      "schema": "generalInquiry",
+      "description": "User-isolated document storage for direct general knowledge questions and Gemini responses."
+    }
+  }
+}

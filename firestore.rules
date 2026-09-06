@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Zero Insecure Defaults: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidInteraction(data, userId) {
+      return data.userId == userId &&
+        data.userId == request.auth.uid &&
+        data.prompt is string && data.prompt.size() > 0 && data.prompt.size() <= 10000 &&
+        data.response is string && data.response.size() <= 25000 &&
+        (!('title' in data) || (data.title is string && data.title.size() <= 300)) &&
+        (!('mode' in data) || (data.mode in ['reflect', 'brainstorm', 'summarize', 'chat'])) &&
+        (!('tags' in data) || (data.tags is list && data.tags.size() <= 10)) &&
+        (!('messages' in data) || (data.messages is list && data.messages.size() <= 50));
+    }
+
+    // User-isolated interactions collection
+    match /users/{userId}/interactions/{interactionId} {
+      allow get, delete: if isOwner(userId) && isValidId(interactionId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(interactionId) &&
+        isValidInteraction(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidId(interactionId) &&
+        isValidInteraction(request.resource.data, userId) &&
+        request.resource.data.userId == resource.data.userId;
+    }
+
+    function isValidGeneralInquiry(data, userId) {
+      return data.userId == userId &&
+        data.userId == request.auth.uid &&
+        data.question is string && data.question.size() > 0 && data.question.size() <= 10000 &&
+        data.response is string && data.response.size() <= 35000 &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+        (!('modelUsed' in data) || (data.modelUsed is string && data.modelUsed.size() <= 100)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 100));
+    }
+
+    // User-isolated general-inquiries collection for direct Q&A with Gemini
+    match /users/{userId}/general-inquiries/{inquiryId} {
+      allow get, delete: if isOwner(userId) && isValidId(inquiryId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(inquiryId) &&
+        isValidGeneralInquiry(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidId(inquiryId) &&
+        isValidGeneralInquiry(request.resource.data, userId) &&
+        request.resource.data.userId == resource.data.userId;
+    }
+  }
+}
