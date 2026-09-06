@@ -43,7 +43,7 @@ export default function Header({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold tracking-tight text-slate-900 text-base sm:text-lg">
-                Gemini Reflections
+                MindEcho
               </span>
               <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

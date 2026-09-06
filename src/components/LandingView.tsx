@@ -28,10 +28,10 @@ export default function LandingView({ onSignIn, isLoading, authError }: LandingV
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs rotate-45">
-              <span className="-rotate-45 font-mono font-bold text-xs">G</span>
+              <span className="-rotate-45 font-mono font-bold text-xs">M</span>
             </div>
             <span className="font-bold text-slate-900 tracking-tight text-lg">
-              Gemini Journal
+              MindEcho
             </span>
           </div>
 

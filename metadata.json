@@ -1,6 +1,6 @@
 {
-  "name": "Gemini Journal & Reflections",
-  "description": "Private, authenticated multi-turn journaling and AI reflection platform using Gemini 3.6 Flash and Cloud Firestore.",
+  "name": "MindEcho",
+  "description": "MindEcho: Private, authenticated mindful journaling and AI reflection platform powered by Gemini and Cloud Firestore.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

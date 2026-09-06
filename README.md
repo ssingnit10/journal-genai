@@ -1,6 +1,6 @@
-# Gemini Journal & Reflections
+# MindEcho — Mindful Journal & AI Reflections
 
-A production-grade, user-authenticated web application built with **Google AI Studio**, powered by **Gemini 3.6 Flash**, **Firebase Authentication (Google Federated Identity)**, and **Cloud Firestore** with Zero-Trust Attribute-Based Access Control (ABAC).
+A production-grade, user-authenticated web application built with **Google AI Studio**, powered by **Gemini**, **Firebase Authentication (Google Federated Identity)**, and **Cloud Firestore** with Zero-Trust Attribute-Based Access Control (ABAC).
 
 ---
 
