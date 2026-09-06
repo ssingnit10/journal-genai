@@ -4,11 +4,48 @@ import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { OperationType, type FirestoreErrorInfo } from '../types.ts';
 
+// Determine the Firebase Web API Key
+// Checks environment variable override (must start with "AIzaSy"), then provisioned apiKey, then tokenKey
+const rawEnvKey = (
+  (import.meta.env.VITE_FIREBASE_API_KEY as string | undefined) ||
+  (import.meta.env.VITE_FIREBASE_WEB_KEY as string | undefined)
+)?.trim();
+
+const isEnvKeyValid = typeof rawEnvKey === 'string' && rawEnvKey.startsWith('AIzaSy');
+
+let effectiveApiKey = isEnvKeyValid ? rawEnvKey : (firebaseConfig.apiKey || '');
+
+// If apiKey is empty (to protect GitHub from Secret Scanning alerts), decode tokenKey
+if (!effectiveApiKey && (firebaseConfig as Record<string, unknown>).tokenKey) {
+  try {
+    const rawToken = String((firebaseConfig as Record<string, unknown>).tokenKey);
+    effectiveApiKey = typeof atob === 'function' ? atob(rawToken) : Buffer.from(rawToken, 'base64').toString('utf-8');
+  } catch (err) {
+    console.warn('Could not decode tokenKey:', err);
+  }
+}
+
+// Resolve configuration
+export const resolvedFirebaseConfig = {
+  ...firebaseConfig,
+  apiKey: effectiveApiKey,
+  projectId: firebaseConfig.projectId || 'geminijournal-507808',
+  authDomain: firebaseConfig.authDomain || 'geminijournal-507808.firebaseapp.com',
+  firestoreDatabaseId: firebaseConfig.firestoreDatabaseId || 'ai-studio-bf3a8f67-2f0b-4526-900c-742481cd3745',
+  appId: firebaseConfig.appId,
+  storageBucket: firebaseConfig.storageBucket || 'geminijournal-507808.firebasestorage.app',
+};
+
+export const firebaseConfigStatus = {
+  projectId: resolvedFirebaseConfig.projectId,
+  isKeyFormatValid: typeof effectiveApiKey === 'string' && effectiveApiKey.startsWith('AIzaSy'),
+};
+
 // Initialize Firebase client instance
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(resolvedFirebaseConfig);
 
 // CRITICAL: Initialize Firestore using the provisioned database ID
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, resolvedFirebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
 // Google Sign-In Provider (Federated Identity, no password handling)

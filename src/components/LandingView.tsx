@@ -72,12 +72,41 @@ export default function LandingView({ onSignIn, isLoading, authError }: LandingV
           {authError && (
             <div
               id="auth-error-banner"
-              className="max-w-md mx-auto p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-2.5 text-left shadow-xs"
+              className="max-w-lg mx-auto p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-3 text-left shadow-xs"
             >
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-              <div className="flex-1">
-                <p className="font-semibold text-rose-900">Sign-in Notice</p>
-                <p className="text-xs text-rose-700 mt-0.5">{authError}</p>
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-600" />
+              <div className="flex-1 space-y-2">
+                <p className="font-semibold text-rose-900 text-sm">Firebase Authentication Configuration</p>
+                <p className="text-xs text-rose-700 leading-relaxed">{authError}</p>
+
+                {authError.includes('Invalid Key Type') ? (
+                  <div className="p-3 rounded-lg bg-white/90 border border-rose-200 text-[11px] text-slate-700 space-y-1.5">
+                    <p className="font-semibold text-rose-950">Key Type Difference:</p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-600">
+                      <li>
+                        <span className="font-mono text-rose-700 font-semibold">AQ...</span> is an AI Studio / Gemini API Key used for the AI models in the backend.
+                      </li>
+                      <li>
+                        <span className="font-mono text-indigo-700 font-semibold">AIzaSy...</span> is a Google Cloud / Firebase Web API Key used by Firebase Auth and Firestore.
+                      </li>
+                    </ul>
+                    <p className="font-medium text-slate-800 pt-1">To resolve:</p>
+                    <ol className="list-decimal list-inside space-y-0.5 text-slate-600">
+                      <li>Open <span className="font-semibold">Firebase Console &gt; Project Settings &gt; General</span></li>
+                      <li>Copy the <span className="font-semibold">Web API Key</span> (starts with <code className="text-indigo-600 font-mono">AIzaSy</code>)</li>
+                      <li>Set <span className="font-mono font-semibold">VITE_FIREBASE_API_KEY</span> or update <span className="font-mono font-semibold">firebase-applet-config.json</span></li>
+                    </ol>
+                  </div>
+                ) : (authError.includes('firebase-applet-config.json') || authError.includes('invalid or expired')) && (
+                  <div className="p-2.5 rounded-lg bg-white/80 border border-rose-200 text-[11px] text-slate-700 space-y-1">
+                    <p className="font-medium text-rose-950">How to resolve:</p>
+                    <ol className="list-decimal list-inside space-y-0.5 text-slate-600">
+                      <li>Open Firebase Console &gt; Project Settings &gt; General</li>
+                      <li>Locate the <span className="font-semibold">Web API Key</span> (starts with <code className="text-indigo-600 font-mono">AIzaSy</code>)</li>
+                      <li>Update <span className="font-mono font-semibold">firebase-applet-config.json</span> with the valid key, or set <span className="font-mono font-semibold">VITE_FIREBASE_API_KEY</span> in environment variables</li>
+                    </ol>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1,20 +1,19 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { initializeApp as initAdminApp, getApps as getAdminApps } from 'firebase-admin/app';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Read Firebase applet configuration
 let firebaseConfig: { projectId: string; firestoreDatabaseId?: string } = { projectId: '' };
 try {
-  const rawConfig = fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf-8');
-  firebaseConfig = JSON.parse(rawConfig);
+  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    const rawConfig = fs.readFileSync(configPath, 'utf-8');
+    firebaseConfig = JSON.parse(rawConfig);
+  }
 } catch (err) {
   console.warn('Could not load firebase-applet-config.json at startup:', err);
 }
@@ -23,7 +22,7 @@ try {
 if (!getAdminApps().length) {
   try {
     initAdminApp({
-      projectId: firebaseConfig.projectId || process.env.GOOGLE_CLOUD_PROJECT || 'smartupai-501516',
+      projectId: firebaseConfig.projectId || process.env.GOOGLE_CLOUD_PROJECT || 'geminijournal-507808',
     });
   } catch (initErr) {
     console.warn('Firebase admin initialization note:', initErr);

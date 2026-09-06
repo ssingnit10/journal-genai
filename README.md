@@ -25,7 +25,7 @@ Ensure you have installed:
 
 Set your active Google Cloud project:
 ```bash
-gcloud config set project smartupai-501516
+gcloud config set project geminijournal-507808
 ```
 
 Enable required Google Cloud APIs:
@@ -35,6 +35,13 @@ gcloud services enable run.googleapis.com \
   firestore.googleapis.com \
   identitytoolkit.googleapis.com
 ```
+
+### Firebase Authentication Setup
+1. In the **Firebase Console** (`console.firebase.google.com`), select your project (`geminijournal-507808`).
+2. Navigate to **Authentication** > **Sign-in method** and ensure **Google** is enabled.
+3. Under **Project Settings** > **General**, locate the **Web API Key**.
+4. Store this key in your local `.env.local` file as `VITE_FIREBASE_API_KEY=AIzaSy...` (never commit this key to version control).
+5. Ensure that authorized domains in Firebase Auth include your Cloud Run service URL and localhost.
 
 ---
 

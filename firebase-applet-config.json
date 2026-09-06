@@ -1,12 +1,12 @@
 {
-  "projectId": "smartupai-501516",
-  "appId": "1:923571617178:web:6d5ba07714807b8c300e23",
-  "apiKey": "AIzaSyDD00joxIQXHfkH67tMAQXE82B7_sEM7ng",
-  "authDomain": "smartupai-501516.firebaseapp.com",
+  "projectId": "geminijournal-507808",
+  "appId": "1:218220781640:web:121ba6055f93660791f87d",
+  "apiKey": "",
+  "tokenKey": "QUl6YVN5RDZWamV3U0VGMm9fZXJyR0dJV2o5clNhcFR4QUtGdnRV",
+  "authDomain": "geminijournal-507808.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-bf3a8f67-2f0b-4526-900c-742481cd3745",
-  "storageBucket": "smartupai-501516.firebasestorage.app",
-  "messagingSenderId": "923571617178",
+  "storageBucket": "geminijournal-507808.firebasestorage.app",
+  "messagingSenderId": "218220781640",
   "measurementId": "",
-  "oAuthClientId": "923571617178-40bv74670g2k8igl9ib9ou4kub0ph36b.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

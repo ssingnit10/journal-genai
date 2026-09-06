@@ -33,19 +33,29 @@ export default function HistorySidebar({
     return Array.from(set);
   }, [interactions]);
 
-  const filteredInteractions = interactions.filter((item) => {
-    const matchesQuery =
-      !searchQuery.trim() ||
-      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.prompt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.response?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (Array.isArray(item.tags) && item.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const queryWithoutHash = normalizedQuery.startsWith('#') ? normalizedQuery.slice(1) : normalizedQuery;
 
-    const matchesMode = filterMode === 'all' || item.mode === filterMode;
-    const matchesTag = filterTag === 'all' || (Array.isArray(item.tags) && item.tags.includes(filterTag));
+  // Filter entries in real-time as user types, matching title and tags
+  const filteredInteractions = useMemo(() => {
+    return interactions.filter((item) => {
+      const matchesSearch =
+        !normalizedQuery ||
+        (item.title && item.title.toLowerCase().includes(normalizedQuery)) ||
+        (Array.isArray(item.tags) &&
+          item.tags.some((t) => {
+            const tagLower = t.toLowerCase();
+            return tagLower.includes(normalizedQuery) || tagLower.includes(queryWithoutHash);
+          })) ||
+        // Fallback to prompt if title is absent
+        (!item.title && item.prompt && item.prompt.toLowerCase().includes(normalizedQuery));
 
-    return matchesQuery && matchesMode && matchesTag;
-  });
+      const matchesMode = filterMode === 'all' || item.mode === filterMode;
+      const matchesTag = filterTag === 'all' || (Array.isArray(item.tags) && item.tags.includes(filterTag));
+
+      return matchesSearch && matchesMode && matchesTag;
+    });
+  }, [interactions, normalizedQuery, queryWithoutHash, filterMode, filterTag]);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -93,18 +103,48 @@ export default function HistorySidebar({
         </button>
       </div>
 
-      {/* Search & Mode Filters */}
+      {/* Search & Filters */}
       <div className="p-3 border-b border-slate-200 space-y-2 bg-white">
+        {/* Search Input for Title and Tags */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            id="history-search-input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search past reflections..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            placeholder="Filter by title or #tag as you type..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-2xs"
+            aria-label="Filter journal entries by title and tags"
           />
+          {searchQuery && (
+            <button
+              id="clear-history-search-btn"
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
+
+        {/* Search match stats */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between text-[11px] px-1 text-slate-500">
+            <span>
+              Matches: <strong className="text-indigo-600 font-semibold">{filteredInteractions.length}</strong> of {interactions.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+            >
+              Reset search
+            </button>
+          </div>
+        )}
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
@@ -160,12 +200,31 @@ export default function HistorySidebar({
       {/* List */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
         {filteredInteractions.length === 0 ? (
-          <div className="p-8 text-center space-y-2">
+          <div className="p-8 text-center space-y-3">
             <Clock className="w-8 h-8 text-slate-300 mx-auto" />
-            <p className="text-xs text-slate-700 font-medium">No reflections found</p>
-            <p className="text-[11px] text-slate-400">
-              {searchQuery || filterTag !== 'all' ? 'Try clearing filters or search keywords' : 'Create your first reflection to see it saved here.'}
-            </p>
+            <div>
+              <p className="text-xs text-slate-700 font-semibold">No matching reflections</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {searchQuery
+                  ? `No journal entries found matching "${searchQuery}" in title or tags.`
+                  : filterTag !== 'all'
+                  ? `No entries found with tag #${filterTag}.`
+                  : 'Create your first reflection to see it saved here.'}
+              </p>
+            </div>
+            {(searchQuery || filterTag !== 'all' || filterMode !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterTag('all');
+                  setFilterMode('all');
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           filteredInteractions.map((item) => {
@@ -200,23 +259,33 @@ export default function HistorySidebar({
                   {/* Tag Badges */}
                   {item.tags && item.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                      {item.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFilterTag(filterTag === tag ? 'all' : tag);
-                          }}
-                          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors cursor-pointer ${
-                            filterTag === tag
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'
-                          }`}
-                          title={`Filter by #${tag}`}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
+                      {item.tags.map((tag) => {
+                        const tagLower = tag.toLowerCase();
+                        const isTagQueryMatch =
+                          Boolean(normalizedQuery) &&
+                          (tagLower.includes(normalizedQuery) || tagLower.includes(queryWithoutHash));
+                        const isTagActive = filterTag === tag;
+
+                        return (
+                          <span
+                            key={tag}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFilterTag(filterTag === tag ? 'all' : tag);
+                            }}
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors cursor-pointer ${
+                              isTagActive
+                                ? 'bg-indigo-600 text-white'
+                                : isTagQueryMatch
+                                ? 'bg-indigo-100 text-indigo-800 ring-1 ring-indigo-400 font-semibold'
+                                : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'
+                            }`}
+                            title={`Filter by #${tag}`}
+                          >
+                            #{tag}
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
 

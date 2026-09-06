@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth, signInWithGoogle, logoutUser } from './lib/firebase.ts';
+import { auth, signInWithGoogle, logoutUser, firebaseConfigStatus } from './lib/firebase.ts';
 import {
   saveUserInteraction,
   deleteUserInteraction,
@@ -82,13 +82,38 @@ export default function App() {
   // Handle Google Sign In
   const handleSignIn = async () => {
     setAuthError(null);
+    if (!firebaseConfigStatus.isKeyFormatValid) {
+      setAuthError(
+        'Firebase Web API Key is not configured. Please add VITE_FIREBASE_API_KEY in your local .env.local file (from Firebase Console > Project Settings > General).'
+      );
+      return;
+    }
     try {
       await signInWithGoogle();
     } catch (err: any) {
+      console.error('Google Sign-In caught error:', err);
       if (err.code === 'auth/popup-blocked') {
         setAuthError('Sign-in popup was blocked by your browser. Please allow popups for this domain.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
+      } else if (
+        err.code === 'auth/cancelled-popup-request' ||
+        err.code === 'auth/popup-closed-by-user'
+      ) {
         // User closed the popup, ignore
+      } else if (
+        err.code === 'auth/api-keys-are-not-supported-by-this-api' ||
+        (err.message && (err.message.includes('api-keys-are-not-supported') || err.message.includes('expected-oauth2-access-token')))
+      ) {
+        setAuthError(
+          'Invalid Key Type: An AI Studio Gemini API Key or OAuth token was provided for Firebase Authentication. Firebase requires a Web API Key (starting with "AIzaSy...") from the Firebase Console (Project Settings > General).'
+        );
+      } else if (
+        err.code === 'auth/api-key-not-valid' ||
+        err.code === 'auth/invalid-api-key' ||
+        (err.message && err.message.includes('api-key-not-valid'))
+      ) {
+        setAuthError(
+          `Firebase Web API Key is invalid or expired for project "${firebaseConfigStatus.projectId}". Please update the "apiKey" in firebase-applet-config.json with the valid Web API Key from the Firebase Console (Project Settings > General), or request Firebase setup in chat.`
+        );
       } else {
         setAuthError(err.message || 'Failed to sign in with Google. Please try again.');
       }
